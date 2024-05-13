@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-deployment
+  labels:
+    app: producer-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: producer-deployment
+  template:
+    metadata:
+      labels:
+        app: producer-deployment
+    spec:
+      containers:
+      - name: producer
+        image: k/docker-lection-main-producer:1
+        env:
+        - name: RABBIT_MQ_HOST
+          value: rabbitmq
+        - name: RABBITMQ_USER
+          value: rmuser
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mq-password
+              key: password
+        - name: QUEUE_NAME
+          value: meassages
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: producer
+  labels:
+    app: producer
+spec:
+  type: NodePort
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30001
+    protocol: TCP
+    name: api
+  selector:
+    app: producer-deployment
